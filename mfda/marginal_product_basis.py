@@ -2,7 +2,7 @@ import numpy as np
 from typing import Iterable, Tuple
 from skfda.representation.basis import Basis 
 from skfda.representation.grid import FDataGrid
-from skfda.misc.operators import LinearDifferentialOperator, gramian_matrix
+from skfda.misc.operators import LinearDifferentialOperator, gram_matrix
 
 class MPB(Basis):
 	r"""
@@ -97,7 +97,7 @@ class MPB(Basis):
 
 		D2 = LinearDifferentialOperator(2)
 		J = [b.gram_matrix() for b in self._basis_list]
-		J_D2 = [gramian_matrix(D2, b) for b in self._basis_list]
+		J_D2 = [gram_matrix(D2, b) for b in self._basis_list]
 		J_cross = [b.inner_product_matrix(b.derivative().derivative()) for b in self._basis_list]
 		
 		R_psi = np.zeros((K, K))
