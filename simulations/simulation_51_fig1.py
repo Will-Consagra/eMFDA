@@ -143,7 +143,7 @@ def create_replication(N, nd, sigma2, dirname, rt_file):
 ####SIMULATION STUDY FROM MAIN TEXT#### 
 def simulation_study_1(mb_dims_model, K, lambdas_fpc_tpa, lambdas_f_marga, nmode, data):
 	## set algorithm parameters  
-	maxiter = (200, 100)
+	maxiter = (100, 100)
 	tol_inner = (1e-3, 1e-3)
 	tol_outer = 1e-3
 	initialize = "random"
