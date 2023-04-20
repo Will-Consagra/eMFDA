@@ -24,6 +24,10 @@ import operator
 
 import argparse
 
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import seaborn as sns
+
 np.random.seed(0)
 svdtuple = namedtuple("SVD", ["U", "s", "Vt"]) 
 
