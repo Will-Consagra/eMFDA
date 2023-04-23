@@ -141,7 +141,7 @@ def create_replications(Nreps, N, nd, sigma2, dirname, rt_file):
 ####SIMULATION STUDIES#### 
 def simulation_study_1(mb_dims_model, K, lambda_grid, nmode, replindex, rt_dir, samp_dir, Nreps):
 	## set algorithm parameters  
-	maxiter = (200, 100)
+	maxiter = (100, 100)
 	tol_inner = (1e-3, 1e-3)
 	tol_outer = 1e-3
 	initialize = "random"
@@ -183,10 +183,8 @@ def simulation_study_1(mb_dims_model, K, lambda_grid, nmode, replindex, rt_dir, 
 	times_fpc_tpa = []
 	mise_fcp_tpa = []
 	lambdas_fpc_tpa = [lambda_grid for d in range(nmode)]
-	start = time.time()
 	factors_1, Smat_1, scalars_1 = fCP_TPA_GCV(Y_noisey, PenMat, lambdas_fpc_tpa, K, 
 										   max_iter=maxiter[0], tol=tol_outer, init=initialize)
-	elapsed_1 = time.time() - start
 	## MISE 
 	mpb_fcp_tpa = MPB.from_evaluations(bspline_basis, factors_1, xgrids=xgrids)
 	Clst_1 = mpb_fcp_tpa.coefficients
@@ -198,7 +196,6 @@ def simulation_study_1(mb_dims_model, K, lambda_grid, nmode, replindex, rt_dir, 
 	Phis = [np.squeeze(bspline_basis[d].evaluate(xgrids[d])).T for d in range(nmode)]
 	Svds = [svdtuple(*np.linalg.svd(Phis[d], full_matrices=False)) for d in range(nmode)]
 	## Cross-validation to select smoothing parameters 
-	start = time.time()
 	cross_val_results = tfold_cross_val(Y_noisey, K, Phis, Rlst, lambda_grid, lambda_grid, 
 							nfold=5, reg_type="l2", verbose=False)
 	cross_val_results_tuple = [(k,v) for k, v in cross_val_results.items()]
@@ -209,37 +206,17 @@ def simulation_study_1(mb_dims_model, K, lambda_grid, nmode, replindex, rt_dir, 
 	Vs = [Svds[d].Vt.T for d in range(nmode)]
 	Dinvs = [np.diag(1./Svds[d].s) for d in range(nmode)]
 	Tlst_bcd = [Dinvs[d]@Vs[d].T@Rlst[d]@Vs[d]@Dinvs[d] for d in range(nmode)]
-	print("Selected params:", lam_c, lam_s)
 	lambdas_bcd = [lam_c]*nmode + [lam_s]
 	Ctilde_2, Smat_2, scalars_2, FLAG_C, FLAG_N = MARGARITA(G, Tlst_bcd, lambdas_bcd, K, 
 										 max_iter=maxiter, tol_inner=tol_inner, 
 										 tol_outer=tol_outer,  regularization="l2", init=initialize, 
 										verbose=False)
-	#Gerr_c = np.inf
-	#for rix in range(5):
-	#	np.random.seed(rix)
-	#	Ctilde, Smat, scalars, FLAG_C, FLAG_N = MARGARITA(G, Tlst_bcd, lambdas_bcd, K, 
-	#									 max_iter=maxiter, tol_inner=tol_inner, 
-	#									 tol_outer=tol_outer,  regularization="l2", init=initialize, 
-	#									verbose=False)
-	#	Smat_scaled = np.multiply(Smat, scalars)
-	#	Ghat = np.zeros(tuple(list(mb_dims_model) + [N]))
-	#	for k in range(K):
-	#		Ghat = Ghat + np.prod(np.ix_(*[Ctilde[d][:, k] for d in range(nmode)]+[Smat_scaled[:,k]]))
-	#	Gerr = tl.norm(Ghat-G)
-	#	if Gerr < Gerr_c:
-	#		Ctilde_2 = Ctilde
-	#		Smat_2 = Smat
-	#		scalars_2 = scalars
-	#		Gerr_c = Gerr
-	#elapsed_2 = time.time() - start
-	elapsed_2 = time.time() - start
 	## Map factors to bpsline coordinate space
 	Clst_2 = [Svds[d].Vt.T @ np.diag(1/Svds[d].s) @ Ctilde_2[d] for d in range(nmode)] 
 	Smat_scaled_2 = np.multiply(Smat_2, scalars_2)
 	ise_2 = MISE_evaluation(Clst_true, Coefs, basis_true, K_true, Jlst_true, Jlst_cross,
 							Clst_2, bspline_basis, Smat_scaled_2, K, Jlst)
-	return ise_1, ise_2, elapsed_1, elapsed_2
+	return ise_1, ise_2
 
 ####MAIN#### 
 
@@ -268,13 +245,10 @@ sigma2_e = args.sigma2_e
 ## Sample parameters 
 nmode = 3 
 Nd = 50 
-#sigma2_e = 10.
-#sigma2_e = 0.5
 Nsamps = 50
 
 ## Distribution parameters 
 n_marginal_basis = 11 ## Fourier basis rank
-#K_t = 20
 alpha = 7e-1
 ## Model params 
 Km = 25  
@@ -315,17 +289,13 @@ elif MODE == "analyze":
 	create_dir(os.path.join(DATA_DIR, "analysis_mpb", rt_dir, samp_dir))
 	results = []
 	for replindex in range(Nreps):
-		#try:
-		ise_fpc_tpa, ise_marg, t_fpc_tpa, t_marg= simulation_study_1(mb_dims_model, Km, lambda_grid, 
-																							nmode, replindex, rt_dir, samp_dir, Nreps)
-		results.append(("FCP-TPA", np.mean(ise_fpc_tpa), t_fpc_tpa))
-		results.append(("MARGARITA",  np.mean(ise_marg), t_marg))
-		#except Exception as e:
-		#	print(e)
+		ise_fpc_tpa, ise_marg = simulation_study_1(mb_dims_model, Km, lambda_grid, 
+												nmode, replindex, rt_dir, samp_dir, Nreps)
+
+		results.append(("FCP-TPA", np.mean(ise_fpc_tpa)))
+		results.append(("MARGARITA",  np.mean(ise_marg)))
 
 		print("Finished replication: %s"%replindex)
-		print(("FCP-TPA", np.mean(ise_fpc_tpa), t_fpc_tpa))
-		print(("MARGARITA",  np.mean(ise_marg), t_marg))
 
 	with open(os.path.join(DATA_DIR, "analysis_mpb", rt_dir, samp_dir, "results_hyperparam_select.pkl"), "wb") as pklfile:
 		pickle.dump(results, pklfile)
