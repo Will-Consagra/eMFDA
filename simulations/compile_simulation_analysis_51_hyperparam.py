@@ -8,6 +8,9 @@ import seaborn as sns
 import itertools 
 import argparse
 
+import warnings
+warnings.filterwarnings("ignore")
+
 def create_dir(newpath):
     try:
         os.mkdir(newpath)
@@ -47,16 +50,22 @@ for sigma2_e in (0.5, 10.):
 		results = pickle.load(pklfile)
 
 	## get corresponds (in terms of DF) TPB fit in same format
-	results_tpb = [("TPB", mise_tpb_rep[0], mise_tpb_rep[1]) for mise_tpb_rep in np.load(os.path.join(DATA_DIR, "analysis_tpb", rt_dir, samp_dir, "results_hyperparam_select.npy"))][:-1]
+	results_tpb = [("TPB", mise_tpb_rep[0]) for mise_tpb_rep in np.load(os.path.join(DATA_DIR, "analysis_tpb", rt_dir, samp_dir, "results_hyperparam_select.npy"))][:-1]
 	results.extend(results_tpb)
 
-	df = pd.DataFrame(results, columns=["Method", "MISE", "Time (s)"])
+	df = pd.DataFrame(results, columns=["Method", "MISE"])
 
 	dfs_mean.append(df.groupby(["Method"]).mean()["MISE"])
 	dfs_se.append(df.groupby(["Method"]).agg(sem)["MISE"])
 
 df_mean = pd.merge(dfs_mean[0], dfs_mean[1], left_index=True, right_index=True, suffixes=("_HighSNR", "_LowSNR"))
 df_se = pd.merge(dfs_se[0], dfs_se[1], left_index=True, right_index=True, suffixes=("_HighSNR", "_LowSNR"))
-
+print("----- Data For Table 1 -----")
+print()
+print("-----Monte-Carlo Mean Results -----")
+print()
 print(df_mean.round(4).transpose().to_latex())
+print()
+print("-----Accompanying Standard Errors  -----")
+print()
 print(df_se.round(4).transpose().to_latex())
