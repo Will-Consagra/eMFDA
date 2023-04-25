@@ -322,19 +322,21 @@ for N in Nsamps:
             for K in Km:
                 datavec = dict_results[(K_t, sigma2, N, nd, mb, K)]
                 for ix in range(len(datavec)):
-                    df_dict[(N, nd)].append(("FPC-TPA", "%s,%s"%(mb, K), datavec[ix][0], datavec[ix][2]))
+                    df_dict[(N, nd)].append(("FCP-TPA", "%s,%s"%(mb, K), datavec[ix][0], datavec[ix][2]))
                     df_dict[(N, nd)].append(("MARGARITA", "%s,%s"%(mb, K), datavec[ix][1], datavec[ix][3]))
 
 create_dir(os.path.join(DATA_DIR,"results"))
 
 ## Plots 
+my_pal = {"MARGARITA": "w", "FCP-TPA": "0.5"}
 sns.set(font_scale=1.3)
 f, ax = plt.subplots(2, 2, figsize=(18,12))
 for i, N in enumerate(Nsamps):
     for j, nd in enumerate(Nds):
         df = pd.DataFrame(df_dict[(N, nd)], columns=["Method",r'Ranks $(m_{d},K_{fit})$',"MISE","Time (s)"])
         ax_ij = sns.boxplot(x=r'Ranks $(m_{d},K_{fit})$', y="MISE", hue="Method",
-                data=df, palette="Set3", ax=ax[i,j], showmeans=True)
+                data=df, palette=my_pal, ax=ax[i,j], showmeans=True,
+                meanprops={"markerfacecolor":"k","markeredgecolor":"k"})
         ax_ij.set_title(r'$N=%s$ $n_{d}=%s$'%(N, nd))
         ax_ij.set_yscale('log')
 
