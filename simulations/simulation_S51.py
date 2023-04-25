@@ -138,9 +138,9 @@ def create_replications(Nreps, N, nd, sigma2, dirname, rt_file):
             pickle.dump({"Y":Y, "Coefs":Coefs, "xgrids":xgrids, "Epsilon":Epsilon, "distr":results}, pklfile)
 
 ####SIMULATION STUDIES#### 
-def simulation_study_1(mb_dims_model, K, lambdas_fpc_tpa, lambdas_f_admm, nmode, replindex, rt_dir, samp_dir, Nreps):
+def simulation_study_1(mb_dims_model, K, lambdas_fpc_tpa, lambdas_bcd, nmode, replindex, rt_dir, samp_dir, Nreps):
     ## set algorithm parameters  
-    maxiter = (200, 100)
+    maxiter = (100, 100)
     tol_inner = (1e-3, 1e-3)
     tol_outer = 1e-3
     initialize = "random"
@@ -195,7 +195,6 @@ def simulation_study_1(mb_dims_model, K, lambdas_fpc_tpa, lambdas_f_admm, nmode,
     Vs = [Svds[d].Vt.T for d in range(nmode)]
     Dinvs = [np.diag(1./Svds[d].s) for d in range(nmode)]
     Tlst_bcd = [Dinvs[d]@Vs[d].T@Rlst[d]@Vs[d]@Dinvs[d] for d in range(nmode)]
-    lambdas_bcd = np.append(lambdas_f_admm, 1e-6) 
     start = time.time()
     Ctilde_2, Smat_2, scalars_2, FLAG_C, FLAG_N = MARGARITA(G, Tlst_bcd, lambdas_bcd, K, 
                                      max_iter=maxiter, tol_inner=tol_inner, 
@@ -298,13 +297,13 @@ elif MODE == "analyze":
 	                        for K in Km:
 	                            for lambda_ in lambda_grid:
 	                                lambdas_fpc_tpa = lambda_*np.ones(nmode)
-	                                lambdas_f_admm = lambda_*np.ones(nmode)
+	                                lambdas_bcd = lambda_*np.ones(nmode+1)
 	                                mb_dims_model = [mb]*3  
 	                                try:
-	                                	ise_fpc_tpa, ise_f_admm, t_fpc_tpa, t_f_admm = simulation_study_1(mb_dims_model, K, 
-	                                                                                            lambdas_fpc_tpa, lambdas_f_admm, 
+	                                	ise_fpc_tpa, ise_f_marg, t_fpc_tpa, t_f_marg = simulation_study_1(mb_dims_model, K, 
+	                                                                                            lambdas_fpc_tpa, lambdas_bcd, 
 	                                                                                            nmode, replindex, rt_dir, samp_dir, Nreps)
-	                                	results[(mb, K, lambda_)] = (ise_fpc_tpa, ise_f_admm, t_fpc_tpa, t_f_admm)
+	                                	results[(mb, K, lambda_)] = (ise_fpc_tpa, ise_f_marg, t_fpc_tpa, t_f_marg)
 	                                except Exception as e:
 	                                    print("here")
 	                                    print(e)
