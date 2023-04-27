@@ -340,7 +340,7 @@ for i, N in enumerate(Nsamps):
         ax_ij.set_title(r'$N=%s$ $n_{d}=%s$'%(N, nd))
         ax_ij.set_yscale('log')
 
-plt.savefig(os.path.join(DATA_DIR,"results","margarita_fcptpa_mise_comparison.png"))
+plt.savefig(os.path.join(DATA_DIR,"results","margarita_fcptpa_mise_comparison.pdf"))
 
 
 
