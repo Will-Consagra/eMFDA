@@ -1,3 +1,7 @@
+# Overview
+
+Code implementing the multidimensional functional data representation methods from "Efficient Multidimensional Functional Data Analysis Using Marginal Product Basis Systems" (https://arxiv.org/pdf/2107.14728.pdf)
+
 # Computing
 
 ## Set up python environment 
